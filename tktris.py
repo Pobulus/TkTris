@@ -1,10 +1,12 @@
 from tkinter import *
 import time, random
+debug = 0
 width = 360
 rotation = 0
 spx = width/2
 spy = 0
-te = width/12
+blocks_in_row = 12
+te = width/blocks_in_row
 height = width * 2-6*te
 root = Tk()
 block_type = "n"
@@ -14,7 +16,24 @@ score = 0
 first_time = True
 root.title("TkTris")
 f = Canvas(root, width=width, height=height)
+helpg = 0
 f.pack()
+def toggle_grid(event):
+	global helpg
+	if helpg:
+		helpg = 0
+		f.delete("grid")
+	else:
+		helpg = 1
+		grid()
+		
+def grid():
+	global helpg
+	if helpg: 
+		for i in range(blocks_in_row):
+			f.create_line(i*te, 0, i*te, height, tags="grid")
+		for i in range(int(height/te)):
+			f.create_line(0, i*te, width, i*te, tags="grid")
 def evoke_rotate_cw(event):
 	global first_time
 	first_time = True
@@ -65,7 +84,8 @@ def block_fall():
 		else:
 			fallen()
 	except IndexError:
-		print("spawning")
+		if debug:
+			print("spawning")
 		pass
 def colisioncheck():
 	touch = f.find_overlapping(f.coords("a")[0]+3,f.coords("a")[1]+3, f.coords("a")[2]-3, f.coords("a")[3]-3 ) + f.find_overlapping(f.coords("b")[0]+3,f.coords("b")[1]+3, f.coords("b")[2]-3, f.coords("b")[3]-3 ) + f.find_overlapping(f.coords("c")[0]+3,f.coords("c")[1]+3, f.coords("c")[2]-3, f.coords("c")[3]-3 ) + f.find_overlapping(f.coords("d")[0]+3,f.coords("d")[1]+3, f.coords("d")[2]-3, f.coords("d")[3]-3 )
@@ -76,7 +96,8 @@ def colisioncheck():
 	for i in touch:
 		if i not in block_pieces:
 			colided = True
-			print("colided")
+			if debug:
+				print("colided")
 			break
 
 	return colided 	
@@ -87,18 +108,22 @@ def reset(event):
 	delay = base_delay
 	f.delete(ALL)
 	print(score)
+	if helpg:
+		grid()
 def loop():
 	global delay
 	global base_delay
 	if delay > 250:
 		delay = int(base_delay - score/2)
-		print("delay:"+ str(delay))
+		if debug:
+			print("delay:"+ str(delay))
 	block_fall()
 	spawn()
 	root.after(delay, loop)
 def scan_line():
 	i = 1
 	global score
+	f.delete("grid")
 	for j in range(5):
 		while i < (int(height/te)):
 			scaner = f.find_overlapping(0, height-int(i*te)+5, width, height-int(i*te)+5)
@@ -106,7 +131,7 @@ def scan_line():
 				break
 
 
-			if len(scaner) > 11:
+			if len(scaner) > blocks_in_row-1:
 				for l in scaner:
 					f.delete(l)
 				leftovers = f.find_overlapping(0, 0, width, height-int(i*te)+5)	
@@ -116,6 +141,7 @@ def scan_line():
 				score += 100
 			scaner = ()
 			i += 1
+	grid()
 def block_left(event):
 	if check_wall_left():
 		f.move("block", -te, 0)
@@ -140,7 +166,12 @@ def block_down(event):
 	else:
 		fallen()
 
-
+def block_harddrop(event):
+	while check_wall_down() and not colisioncheck():
+		f.move("block", 0, te)
+	if colisioncheck():
+		f.move("block", 0, -te)
+	fallen()
 def rotate_cw(x, y):
 	global rotation
 	global first_time
@@ -243,7 +274,8 @@ def rotate_cw(x, y):
 			f.move("c", te, te)
 			f.move("d", -te, te)
 			rotation = 0
-	print(rotation)
+	if debug:		
+		print(rotation)
 	if first_time == True:
 		if not check_wall_down() or not check_rotate_left() or not check_rotate_right() or colisioncheck():
 			first_time = False
@@ -357,7 +389,8 @@ def rotate_ccw(x, y):
 			f.move("c", -te, te)
 			f.move("d", -te, -te)
 			rotation = 2
-	print(rotation)
+	if debug:
+		print(rotation)
 	if first_time == True:
 		if not check_wall_down() or not check_rotate_left() or not check_rotate_right() or colisioncheck():
 			first_time = False
@@ -383,7 +416,8 @@ def spawn():
 			spawn_s()
 		elif i == 7:
 			spawn_z()
-		print(block_type)
+		if debug:	
+			print(block_type)
 		if cnt < 2 and colisioncheck():
 			print("You scored: " + str(score))
 			fallen()
@@ -496,7 +530,8 @@ root.bind("q", evoke_rotate_ccw)
 root.bind("a", block_left)
 root.bind("d", block_right)
 root.bind("s", block_down)
-root.bind("w", scan_line)
+root.bind("w", block_harddrop)
+root.bind("g", toggle_grid)
 root.bind("r", reset)
 root.after(delay, loop)
 root.mainloop()
