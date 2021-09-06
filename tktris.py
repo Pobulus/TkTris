@@ -3,7 +3,6 @@ from tkinter import *
 import time, random
 
 debug = 1
-
 width = 360
 rotation = 0
 spx = width/2
@@ -18,18 +17,30 @@ base_delay = 1500
 score = 0
 first_time = True
 root.title("TkTris")
-f = Canvas(root, width=width, height=height, bg="black")
-pv = Canvas(root, width=te*4, height= te*3, bg="black")
-l1 = Label(text="Next up:")
-l2 = Label(text="Your score:")
+frame = Frame(root)
+hold_blocker = False
+f = Canvas(frame, width=width, height=height, bg="black")
+pv = Canvas(frame, width=te*4, height= te*3, bg="black")
+l1 = Label(frame, text="Next up:")
+l2 = Label(frame, text="hold")
+l3 = Label(frame, text="Your score:")
 scr = StringVar()
-lscore = Label(root, textvariable=scr)
+lscore = Label(frame, textvariable=scr)
+
+
+holdpv = Canvas(frame, width=te*4, height= te*3, bg="black")
 helpg = 0
+frame.pack()
 f.pack(side="left")
 l1.pack()
 pv.pack()
 l2.pack()
+holdpv.pack()
+
+l3.pack()
 lscore.pack()
+holder = "n"
+permholder = "n"
 itemcolor = "white"
 nextup = random.randint(1,7)
 bag = [1,2,3,4,5,6,7]
@@ -96,6 +107,13 @@ def check_wall_down():
 		return True
 	else:
 		return False
+		
+def gcheck_wall_down():
+	if f.coords("ga")[3] < height and f.coords("gb")[3] < height and	f.coords("gc")[3] < height and  f.coords("gd")[3] < height:
+		return True
+	else:
+		return False
+
 def block_fall():
 	#print(f.coords("a"))
 	#print(f.coords("b"))
@@ -113,14 +131,35 @@ def block_fall():
 		if debug:
 			print("spawning")
 		pass
+	ghost_drop()
+	
+	
+def ghost_drop():
+	f.coords("ga", f.coords("a"))
+	f.coords("gb", f.coords("b"))
+	f.coords("gc", f.coords("c"))
+	f.coords("gd", f.coords("d"))
+	try:
+		while gcheck_wall_down():
+			f.move("ghost", 0, te)
+			if gcolisioncheck():
+				f.move("ghost", 0, -te)
+				break
+		
+	except IndexError:
+		if debug:
+			print("gspawning")
+		pass
+	f.tag_lower("ghost")
 def colisioncheck():
 	touch = f.find_overlapping(f.coords("a")[0]+3,f.coords("a")[1]+3, f.coords("a")[2]-3, f.coords("a")[3]-3 ) + f.find_overlapping(f.coords("b")[0]+3,f.coords("b")[1]+3, f.coords("b")[2]-3, f.coords("b")[3]-3 ) + f.find_overlapping(f.coords("c")[0]+3,f.coords("c")[1]+3, f.coords("c")[2]-3, f.coords("c")[3]-3 ) + f.find_overlapping(f.coords("d")[0]+3,f.coords("d")[1]+3, f.coords("d")[2]-3, f.coords("d")[3]-3 )
 
 
 	block_pieces = f.find_withtag("block")
+	ghost_pieces = f.find_withtag("ghost")
 	colided = False
 	for i in touch:
-		if i not in block_pieces:
+		if i not in block_pieces and i not in ghost_pieces:
 			colided = True
 			if debug:
 				print("colided")
@@ -130,11 +169,11 @@ def colisioncheck():
 def gcolisioncheck():
 	touch = f.find_overlapping(f.coords("ga")[0]+3,f.coords("ga")[1]+3, f.coords("ga")[2]-3, f.coords("ga")[3]-3 ) + f.find_overlapping(f.coords("gb")[0]+3,f.coords("gb")[1]+3, f.coords("gb")[2]-3, f.coords("gb")[3]-3 ) + f.find_overlapping(f.coords("gc")[0]+3,f.coords("gc")[1]+3, f.coords("gc")[2]-3, f.coords("gc")[3]-3 ) + f.find_overlapping(f.coords("gd")[0]+3,f.coords("gd")[1]+3, f.coords("gd")[2]-3, f.coords("gd")[3]-3 )
 
-
+	block_pieces = f.find_withtag("block")
 	ghost_pieces = f.find_withtag("ghost")
 	colided = False
 	for i in touch:
-		if i not in ghost_pieces:
+		if i not in ghost_pieces and i not in block_pieces:
 			colided = True
 			if debug:
 				print("ghostcolided")
@@ -147,7 +186,12 @@ def reset(event):
 	global delay
 	global base_delay
 	delay = base_delay
-
+	global permholder
+	permholder = "n"
+	global holder
+	holder = "n"
+	pv.delete(ALL)
+	holdpv.delete("block")
 	f.delete(ALL)
 	print(score)
 	score = 0
@@ -195,13 +239,14 @@ def block_left(event):
 		f.move("block", -te, 0)
 		if colisioncheck():
 			f.move("block", te, 0)
-
+	ghost_drop()
+	
 def block_right(event):
 	if check_wall_right():
 		f.move("block", te, 0)
 		if colisioncheck():
 			f.move("block", -te, 0)
-
+	ghost_drop()
 
 def block_down(event):
 	if check_wall_down():
@@ -213,7 +258,7 @@ def block_down(event):
 
 	else:
 		fallen()
-
+	ghost_drop()
 def block_harddrop(event):
 	while check_wall_down() and not colisioncheck():
 		f.move("block", 0, te)
@@ -328,6 +373,7 @@ def rotate_cw(x, y):
 		if not check_wall_down() or not check_rotate_left() or not check_rotate_right() or colisioncheck():
 			first_time = False
 			rotate_ccw(block_type, rotation)
+	ghost_drop()
 def rotate_ccw(x, y):
 	global rotation
 	global first_time
@@ -443,6 +489,9 @@ def rotate_ccw(x, y):
 		if not check_wall_down() or not check_rotate_left() or not check_rotate_right() or colisioncheck():
 			first_time = False
 			rotate_cw(block_type, rotation)
+	ghost_drop()
+
+
 def randomPiece():
 	global bag
 	r = random.randint(0,len(bag)-1)
@@ -451,7 +500,57 @@ def randomPiece():
 	if not len(bag):
 		bag = [1,2,3,4,5,6,7]
 	return out
+def hold(event):
+	global permholder
 	
+	global rotation
+	global block_type
+	global hold_blocker
+	if not hold_blocker:
+		hold_blocker = True
+		holder = permholder
+		permholder = block_type
+		
+		rotation = 0
+		if permholder == "t":
+			hold_t()
+		elif permholder == "o":
+			hold_o()
+		elif permholder == "i":
+			hold_i()
+		elif permholder =="l":
+			hold_l()
+		elif permholder == "j":
+			hold_j()
+		elif permholder == "s":
+			hold_s()
+		elif permholder == "z":
+			hold_z()
+		if holder == "t":
+			spawn_t()
+
+		elif holder == "o":
+			spawn_o()
+
+		elif holder == "i":
+			spawn_i()
+
+		elif holder == "l":
+			spawn_l()
+
+		elif holder == "j":
+			spawn_j()
+
+		elif holder == "s":
+			spawn_s()
+
+		elif holder == "z":
+			spawn_z()
+		elif holder == "n":
+			print("holder == n")
+			block_type = "n"
+			spawn()
+		ghost_drop()
 def spawn():
 
 
@@ -464,24 +563,30 @@ def spawn():
 		cnt = 0
 		if i == 1:
 			spawn_t()
-
+			gspawn_t()
 		elif i == 2:
 			spawn_o()
+			gspawn_o()	
 
 		elif i == 3:
 			spawn_i()
-
+			gspawn_i()
 		elif i == 4:
 			spawn_l()
+			gspawn_l()
 
 		elif i == 5:
 			spawn_j()
+			gspawn_j()
 
 		elif i == 6:
 			spawn_s()
+			gspawn_s()
 
 		elif i == 7:
 			spawn_z()
+			gspawn_z()
+		ghost_drop()
 		if debug:
 			print(block_type)
 		if cnt < 2 and colisioncheck():
@@ -490,6 +595,14 @@ def spawn():
 			print("You scored: " + str(score))
 			fallen()
 			f.delete(ALL)
+			holdpv.delete(ALL)
+			pv.delete(ALL)
+			global holder
+			holder = "n"
+			global permholder
+			permholder = "n"
+			global hold_blocker
+			hold_blocker = 0
 			score = 0
 			delay = base_delay
 
@@ -538,6 +651,18 @@ def nextup_t():
 	pv.move(tile3, te, 0)
 	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "d") )
 	pv.move(tile4, 0, te)
+	
+def hold_t():
+	holdpv.delete("block")
+
+	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "a"))
+	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "b") )
+	holdpv.move(tile2, -te, 0)
+	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "c") )
+	holdpv.move(tile3, te, 0)
+	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "d") )
+	holdpv.move(tile4, 0, te)
+	
 def spawn_l():
 	f.delete("block")
 	global block_type
@@ -549,6 +674,7 @@ def spawn_l():
 	f.move(tile3, te, 0)
 	tile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="blue", tags=("block", "d") )
 	f.move(tile4, -te, te)
+	
 def nextup_l():
 	pv.delete("block")
 	tile1 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="blue", tags=("block", "a"))
@@ -558,6 +684,16 @@ def nextup_l():
 	pv.move(tile3, te, 0)
 	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="blue", tags=("block", "d") )
 	pv.move(tile4, -te, te)
+
+def hold_l():
+	holdpv.delete("block")
+	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="blue", tags=("block", "a"))
+	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="blue", tags=("block", "b") )
+	holdpv.move(tile2, -te, 0)
+	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="blue", tags=("block", "c") )
+	holdpv.move(tile3, te, 0)
+	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="blue", tags=("block", "d") )
+	holdpv.move(tile4, -te, te)
 
 def spawn_j():
 	f.delete("block")
@@ -582,6 +718,18 @@ def nextup_j():
 	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="orange", tags=("block", "d") )
 	pv.move(tile4, te, te)		  
 
+def hold_j():
+	holdpv.delete("block")
+
+	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="orange", tags=("block", "a"))
+	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="orange", tags=("block", "b") )
+	holdpv.move(tile2, -te, 0)
+	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="orange", tags=("block", "c") )
+	holdpv.move(tile3, te, 0)
+	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="orange", tags=("block", "d") )
+	holdpv.move(tile4, te, te)		  
+
+
 def spawn_o():
 	f.delete("block")
 	global block_type
@@ -593,6 +741,7 @@ def spawn_o():
 	f.move(tile3, 0, te)
 	tile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="yellow", tags=("block", "d") )
 	f.move(tile4, -te, te)
+	
 def nextup_o():
 	pv.delete("block")
 	tile1 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="yellow", tags=("block", "a"))
@@ -602,6 +751,18 @@ def nextup_o():
 	pv.move(tile3, 0, te)
 	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="yellow", tags=("block", "d") )
 	pv.move(tile4, -te, te)
+	
+def hold_o():
+	holdpv.delete("block")
+	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="yellow", tags=("block", "a"))
+	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="yellow", tags=("block", "b") )
+	holdpv.move(tile2, -te, 0)
+	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="yellow", tags=("block", "c") )
+	holdpv.move(tile3, 0, te)
+	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="yellow", tags=("block", "d") )
+	holdpv.move(tile4, -te, te)
+	
+	
 def spawn_i():
 	f.delete("block")
 	global block_type
@@ -625,6 +786,18 @@ def nextup_i():
 	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="cyan", tags=("block", "d"))
 	pv.move(tile4, -2*te, 0)
 
+def hold_i():
+	holdpv.delete("block")
+
+	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="cyan", tags=("block", "a"))
+	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="cyan", tags=("block", "b" ))
+	holdpv.move(tile2, -te, 0)
+	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="cyan", tags=("block", "c") )
+	holdpv.move(tile3, te, 0)
+	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="cyan", tags=("block", "d"))
+	holdpv.move(tile4, -2*te, 0)
+
+
 def spawn_s():
 	f.delete("block")
 	global block_type
@@ -647,7 +820,21 @@ def nextup_s():
 	tile3 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "c") )
 	pv.move(tile3, -2*te, te)
 	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "d") )
-	pv.move(tile4, -te, te)	   
+	pv.move(tile4, -te, te)	
+	
+def hold_s():
+
+	holdpv.delete("block")
+
+	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "a"))
+	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "b") )
+	holdpv.move(tile2, -te, 0)
+	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "c") )
+	holdpv.move(tile3, -2*te, te)
+	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "d") )
+	holdpv.move(tile4, -te, te)	
+	
+	   
 def spawn_z():
 	f.delete("block")
 	global block_type
@@ -671,83 +858,94 @@ def nextup_z():
 	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="red", tags=("block", "d") )
 	pv.move(tile4, te, te)
 
+def hold_z():
+	holdpv.delete("block")
+
+	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="red", tags=("block", "a"))
+	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="red", tags=("block", "b") )
+	holdpv.move(tile2, -te, 0)
+	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="red", tags=("block", "c") )
+	holdpv.move(tile3, 0, te)
+	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="red", tags=("block", "d") )
+	holdpv.move(tile4, te, te)
+
 
 def gspawn_t():
 	f.delete("ghost")
 
-	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple", tags=("ghost", "ga"))
-	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple", tags=("ghost", "gb") )
+	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple4", tags=("ghost", "ga"))
+	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple4", tags=("ghost", "gb") )
 	f.move(gtile2, -te, 0)
-	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple", tags=("ghost", "gc") )
+	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple4", tags=("ghost", "gc") )
 	f.move(gtile3, te, 0)
-	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple", tags=("ghost", "gd") )
+	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple4", tags=("ghost", "gd") )
 	f.move(gtile4, 0, te)
 
 def gspawn_l():
 	f.delete("ghost")
 
-	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="blue", tags=("ghost", "ga"))
-	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="blue", tags=("ghost", "gb") )
+	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="blue4", tags=("ghost", "ga"))
+	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="blue4", tags=("ghost", "gb") )
 	f.move(gtile2, -te, 0)
-	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="blue", tags=("ghost", "gc") )
+	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="blue4", tags=("ghost", "gc") )
 	f.move(gtile3, te, 0)
-	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="blue", tags=("ghost", "gd") )
+	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="blue4", tags=("ghost", "gd") )
 	f.move(gtile4, -te, te)
 
 def gspawn_j():
 	f.delete("ghost")
 
-	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="orange", tags=("ghost", "ga"))
-	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="orange", tags=("ghost", "gb") )
+	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="orange4", tags=("ghost", "ga"))
+	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="orange4", tags=("ghost", "gb") )
 	f.move(gtile2, -te, 0)
-	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="orange", tags=("ghost", "gc") )
+	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="orange4", tags=("ghost", "gc") )
 	f.move(gtile3, te, 0)
-	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="orange", tags=("ghost", "gd") )
+	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="orange4", tags=("ghost", "gd") )
 	f.move(gtile4, te, te)
 
 
 def gspawn_o():
 	f.delete("ghost")
 
-	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="yellow", tags=("ghost", "ga"))
-	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="yellow", tags=("ghost", "gb") )
+	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="yellow4", tags=("ghost", "ga"))
+	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="yellow4", tags=("ghost", "gb") )
 	f.move(gtile2, -te, 0)
-	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="yellow", tags=("ghost", "gc") )
+	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="yellow4", tags=("ghost", "gc") )
 	f.move(gtile3, 0, te)
-	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="yellow", tags=("ghost", "gd") )
+	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="yellow4", tags=("ghost", "gd") )
 	f.move(gtile4, -te, te)
 def gspawn_i():
 	f.delete("ghost")
 
-	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="cyan", tags=("ghost", "ga"))
-	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="cyan", tags=("ghost", "gb" ))
+	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="cyan4", tags=("ghost", "ga"))
+	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="cyan4", tags=("ghost", "gb" ))
 	f.move(gtile2, -te, 0)
-	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="cyan", tags=("ghost", "gc") )
+	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="cyan4", tags=("ghost", "gc") )
 	f.move(gtile3, te, 0)
-	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="cyan", tags=("ghost", "gd"))
+	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="cyan4", tags=("ghost", "gd"))
 	f.move(gtile4, 2*te, 0)
 
 def gspawn_s():
 	f.delete("ghost")
 
-	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green", tags=("ghost", "ga"))
-	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green", tags=("ghost", "gb") )
+	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green4", tags=("ghost", "ga"))
+	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green4", tags=("ghost", "gb") )
 	f.move(gtile2, -te, 0)
-	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green", tags=("ghost", "gc") )
+	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green4", tags=("ghost", "gc") )
 	f.move(gtile3, -2*te, te)
-	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green", tags=("ghost", "gd") )
+	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green4", tags=("ghost", "gd") )
 	f.move(gtile4, -te, te)
 
 
 def gspawn_z():
 	f.delete("ghost")
 
-	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="red", tags=("ghost", "ga"))
-	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="red", tags=("ghost", "gb") )
+	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="red4", tags=("ghost", "ga"))
+	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="red4", tags=("ghost", "gb") )
 	f.move(gtile2, -te, 0)
-	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="red", tags=("ghost", "gc") )
+	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="red4", tags=("ghost", "gc") )
 	f.move(gtile3, 0, te)
-	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="red", tags=("ghost", "gd") )
+	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="red4", tags=("ghost", "gd") )
 	f.move(gtile4, te, te)
 
 
@@ -767,6 +965,8 @@ def fallen():
 	block_type = "n"
 	global rotation
 	rotation = 0
+	global hold_blocker
+	hold_blocker = False
 	scan_line()
 	
 #Controls
@@ -778,6 +978,8 @@ root.bind("d", block_right)
 root.bind("s", block_down)
 root.bind("w", block_harddrop)
 root.bind("g", toggle_grid)
+root.bind("h", hold)
+
 root.bind("r", reset)
 root.bind("i", toggle_darkmode)
 root.bind("p", toggle_pause)
