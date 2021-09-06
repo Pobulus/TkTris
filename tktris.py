@@ -1,6 +1,9 @@
+#!/bin/python3
 from tkinter import *
 import time, random
+
 debug = 1
+
 width = 360
 rotation = 0
 spx = width/2
@@ -29,6 +32,7 @@ l2.pack()
 lscore.pack()
 itemcolor = "white"
 nextup = random.randint(1,7)
+bag = [1,2,3,4,5,6,7]
 pause = False
 def toggle_pause(event):
 		global pause
@@ -439,7 +443,15 @@ def rotate_ccw(x, y):
 		if not check_wall_down() or not check_rotate_left() or not check_rotate_right() or colisioncheck():
 			first_time = False
 			rotate_cw(block_type, rotation)
-
+def randomPiece():
+	global bag
+	r = random.randint(0,len(bag)-1)
+	out = bag[r]
+	bag.remove(out)
+	if not len(bag):
+		bag = [1,2,3,4,5,6,7]
+	return out
+	
 def spawn():
 
 
@@ -448,7 +460,7 @@ def spawn():
 		global nextup
 		global delay
 		i = nextup
-		nextup = random.randint(1,7)
+		nextup = randomPiece()
 		cnt = 0
 		if i == 1:
 			spawn_t()
@@ -756,6 +768,9 @@ def fallen():
 	global rotation
 	rotation = 0
 	scan_line()
+	
+#Controls
+nextup = randomPiece()
 root.bind("e", evoke_rotate_cw)
 root.bind("q", evoke_rotate_ccw)
 root.bind("a", block_left)
