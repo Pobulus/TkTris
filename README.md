@@ -12,3 +12,5 @@ W = Move the block straight down<br>
 Q/E = Rotate the block clockwise/counter clockwise<br>
 R = Restart the game<br>
 G = Toggle the help grid<br>
+H = Hold block<br>
+I = Light mode
