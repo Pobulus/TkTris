@@ -3,7 +3,7 @@ from tkinter import *
 import time, random, os
 playername = os.getlogin()
 print(playername)
-
+alph = ["a", "b", "c", "d"]
 
 minimal_delay = 250
 delay = 1500
@@ -18,13 +18,16 @@ blocks_in_row = 12
 te = width/blocks_in_row
 height = width * 2-6*te
 root = Tk()
+root.configure(background="gray20")
 block_type = "n"
 
 score = 0
 first_time = True
 root.title("TkTris")
 frame = Frame(root)
+frame.configure(background="gray20")
 sbframe = Frame(frame)
+sbframe.configure(background="gray20")
 hold_blocker = False
 f = Canvas(frame, width=width, height=height, bg="black")
 pv = Canvas(frame, width=te*4, height= te*3, bg="black")
@@ -33,7 +36,9 @@ l2 = Label(frame, text="hold")
 l3 = Label(frame, text="Your score:")
 scr = StringVar()
 lscore = Label(frame, textvariable=scr)
-
+darken = [l1, l2, l3, lscore]
+for d in darken:
+	d.configure(background="gray20", foreground="white")
 
 holdpv = Canvas(frame, width=te*4, height= te*3, bg="black")
 helpg = 0
@@ -49,7 +54,7 @@ lscore.pack()
 sbframe.pack()
 holder = "n"
 permholder = "n"
-itemcolor = "white"
+itemcolor = "gray"
 nextup = random.randint(1,7)
 bag = [1,2,3,4,5,6,7]
 pause = False
@@ -65,7 +70,7 @@ class ScoreBoard:
 				except IndexError:
 					#self.e.insert(END, "null")
 					pass
-				self.e.config(state="disabled", disabledforeground="black")
+				self.e.config(state="disabled",disabledbackground="gray25", disabledforeground="white")
 
 
 
@@ -593,6 +598,11 @@ def hold(event):
 			print("holder == n")
 			block_type = "n"
 			spawn()
+		for i in alph:
+			try:
+				f.itemconfig("g"+i, fill=f.itemcget(i, "fill")+"4")
+			except TclError:
+				f.itemconfig("g"+i, fill=f.itemcget(i, "fill")[:-1]+"4")
 		ghost_drop()
 def spawn():
 
@@ -697,33 +707,33 @@ def spawn_t():
 	f.delete("block")
 	global block_type
 	block_type = "t"
-	tile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple", tags=("block", "a"))
-	tile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple", tags=("block", "b") )
+	tile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="magenta1", tags=("block", "a"))
+	tile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="magenta1", tags=("block", "b") )
 	f.move(tile2, -te, 0)
-	tile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple", tags=("block", "c") )
+	tile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="magenta1", tags=("block", "c") )
 	f.move(tile3, te, 0)
-	tile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple", tags=("block", "d") )
+	tile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="magenta1", tags=("block", "d") )
 	f.move(tile4, 0, te)
 def nextup_t():
 	pv.delete("block")
 
-	tile1 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "a"))
-	tile2 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "b") )
+	tile1 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="magenta1", tags=("block", "a"))
+	tile2 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="magenta1", tags=("block", "b") )
 	pv.move(tile2, -te, 0)
-	tile3 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "c") )
+	tile3 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="magenta1", tags=("block", "c") )
 	pv.move(tile3, te, 0)
-	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "d") )
+	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="magenta1", tags=("block", "d") )
 	pv.move(tile4, 0, te)
 	
 def hold_t():
 	holdpv.delete("block")
 
-	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "a"))
-	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "b") )
+	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="magenta1", tags=("block", "a"))
+	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="magenta1", tags=("block", "b") )
 	holdpv.move(tile2, -te, 0)
-	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "c") )
+	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="magenta1", tags=("block", "c") )
 	holdpv.move(tile3, te, 0)
-	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="purple", tags=("block", "d") )
+	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="magenta1", tags=("block", "d") )
 	holdpv.move(tile4, 0, te)
 	
 def spawn_l():
@@ -865,36 +875,36 @@ def spawn_s():
 	f.delete("block")
 	global block_type
 	block_type = "s"
-	tile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green", tags=("block", "a"))
-	tile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green", tags=("block", "b") )
+	tile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green2", tags=("block", "a"))
+	tile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green2", tags=("block", "b") )
 	f.move(tile2, -te, 0)
-	tile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green", tags=("block", "c") )
+	tile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green2", tags=("block", "c") )
 	f.move(tile3, -2*te, te)
-	tile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green", tags=("block", "d") )
+	tile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="green2", tags=("block", "d") )
 	f.move(tile4, -te, te)
 
 def nextup_s():
 
 	pv.delete("block")
 
-	tile1 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "a"))
-	tile2 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "b") )
+	tile1 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="green2", tags=("block", "a"))
+	tile2 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="green2", tags=("block", "b") )
 	pv.move(tile2, -te, 0)
-	tile3 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "c") )
+	tile3 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="green2", tags=("block", "c") )
 	pv.move(tile3, -2*te, te)
-	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "d") )
+	tile4 = pv.create_rectangle(2*te, te, 3*te,2*te, fill="green2", tags=("block", "d") )
 	pv.move(tile4, -te, te)	
 	
 def hold_s():
 
 	holdpv.delete("block")
 
-	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "a"))
-	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "b") )
+	tile1 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green2", tags=("block", "a"))
+	tile2 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green2", tags=("block", "b") )
 	holdpv.move(tile2, -te, 0)
-	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "c") )
+	tile3 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green2", tags=("block", "c") )
 	holdpv.move(tile3, -2*te, te)
-	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green", tags=("block", "d") )
+	tile4 = holdpv.create_rectangle(2*te, te, 3*te,2*te, fill="green2", tags=("block", "d") )
 	holdpv.move(tile4, -te, te)	
 	
 	   
@@ -936,12 +946,12 @@ def hold_z():
 def gspawn_t():
 	f.delete("ghost")
 
-	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple4", tags=("ghost", "ga"))
-	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple4", tags=("ghost", "gb") )
+	gtile1 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="magenta4", tags=("ghost", "ga"))
+	gtile2 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="magenta4", tags=("ghost", "gb") )
 	f.move(gtile2, -te, 0)
-	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple4", tags=("ghost", "gc") )
+	gtile3 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="magenta4", tags=("ghost", "gc") )
 	f.move(gtile3, te, 0)
-	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="purple4", tags=("ghost", "gd") )
+	gtile4 = f.create_rectangle(spx, spy, spx + te, spy+ te, fill="magenta4", tags=("ghost", "gd") )
 	f.move(gtile4, 0, te)
 
 def gspawn_l():
@@ -1017,11 +1027,9 @@ def fallen():
 	#print(f.coords("b"))
 	#print(f.coords("c"))
 	#print(f.coords("d"))
-
-	f.create_rectangle(f.coords("a"), tags="brick", fill=itemcolor)
-	f.create_rectangle(f.coords("b"), tags="brick", fill=itemcolor)
-	f.create_rectangle(f.coords("c"), tags="brick", fill=itemcolor)
-	f.create_rectangle(f.coords("d"), tags="brick", fill=itemcolor)
+	for i in alph:
+		f.create_rectangle(f.coords(i), tags="brick", fill=f.itemcget(i, "fill"))
+	
 	f.delete("block")
 	f.delete("ghost")
 	global block_type
@@ -1042,7 +1050,7 @@ root.bind("d", block_right)
 root.bind("s", block_down)
 root.bind("w", block_harddrop)
 root.bind("g", toggle_grid)
-root.bind("h", hold)
+root.bind("f", hold)
 
 root.bind("r", reset)
 root.bind("i", toggle_darkmode)
