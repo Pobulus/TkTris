@@ -5,8 +5,8 @@ playername = os.getlogin()
 print(playername)
 
 
-minimal_delay = 400
-delay =250
+minimal_delay = 250
+delay = 1500
 base_delay = 1500
 
 debug = 0
@@ -247,7 +247,7 @@ def loop():
 	scr.set(str(score))
 	print(score)
 	if delay > minimal_delay:
-		delay = int(base_delay - score/2)
+		delay = int(base_delay - score/4)
 	if not pause:
 		block_fall()
 		if debug:
