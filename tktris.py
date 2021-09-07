@@ -97,12 +97,6 @@ def toggle_pause(event):
 		global pause
 		pause = not pause
 
-def toggle_darkmode(event):
-		global itemcolor
-		itemcolor = "black"
-		f.configure(bg="white")
-		f.itemconfig("brick", fill="black")
-		f.itemconfig("grid", fill="black")
 def toggle_grid(event):
 	global helpg
 	if helpg:
@@ -1053,7 +1047,7 @@ root.bind("g", toggle_grid)
 root.bind("f", hold)
 
 root.bind("r", reset)
-root.bind("i", toggle_darkmode)
+
 root.bind("p", toggle_pause)
 root.after(delay, loop)
 root.mainloop()
