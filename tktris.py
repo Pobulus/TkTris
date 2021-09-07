@@ -1,8 +1,15 @@
 #!/bin/python3
 from tkinter import *
-import time, random
+import time, random, os
+playername = os.getlogin()
+print(playername)
 
-debug = 1
+
+minimal_delay = 400
+delay =250
+base_delay = 1500
+
+debug = 0
 width = 360
 rotation = 0
 spx = width/2
@@ -12,12 +19,12 @@ te = width/blocks_in_row
 height = width * 2-6*te
 root = Tk()
 block_type = "n"
-delay =1500
-base_delay = 1500
+
 score = 0
 first_time = True
 root.title("TkTris")
 frame = Frame(root)
+sbframe = Frame(frame)
 hold_blocker = False
 f = Canvas(frame, width=width, height=height, bg="black")
 pv = Canvas(frame, width=te*4, height= te*3, bg="black")
@@ -39,12 +46,48 @@ holdpv.pack()
 
 l3.pack()
 lscore.pack()
+sbframe.pack()
 holder = "n"
 permholder = "n"
 itemcolor = "white"
 nextup = random.randint(1,7)
 bag = [1,2,3,4,5,6,7]
 pause = False
+
+class ScoreBoard:
+	def __init__(self,root):
+		for i in range(4):
+			for j in range(2):
+				self.e = Entry(root, width=int(te/4))
+				self.e.grid(row=i, column=j)
+				try:
+					self.e.insert(END, scores[i][j])
+				except IndexError:
+					#self.e.insert(END, "null")
+					pass
+				self.e.config(state="disabled", disabledforeground="black")
+
+
+
+
+def readScores():
+	global scores
+	global sb
+	scores = []
+	try:
+		with open("scores.dat") as file:
+			lines = file.readlines()
+			for line in lines:
+				scores.append(line.strip().split(", "))
+			print(scores)
+			sb = ScoreBoard(sbframe)
+			file.close()
+	except FileNotFoundError:
+		print("Error, scores.dat is missing")
+		os.system(">scores.dat")
+		readScores()
+
+
 def toggle_pause(event):
 		global pause
 		pause = not pause
@@ -203,7 +246,7 @@ def loop():
 	global scr
 	scr.set(str(score))
 	print(score)
-	if delay > 250:
+	if delay > minimal_delay:
 		delay = int(base_delay - score/2)
 	if not pause:
 		block_fall()
@@ -593,6 +636,21 @@ def spawn():
 			global score, delay, base_delay
 
 			print("You scored: " + str(score))
+			global scores
+			
+			for i in range(len(scores)):
+				try:
+					if score > int(scores[i][1]):
+						scores.insert(i, [playername, score])
+						break
+				except IndexError:
+						scores[i] = [playername, score]
+			if not len(scores):
+				scores.append([playername, score])
+			print(scores)
+			writeScores()
+			
+			readScores()
 			fallen()
 			f.delete(ALL)
 			holdpv.delete(ALL)
@@ -626,9 +684,14 @@ def spawn():
 			nextup_z()	
 
 
-
-
-
+def writeScores():
+	with open("scores.dat", "w") as file:
+		for i in scores:
+			file.write(str(i[0]))
+			file.write(", ")
+			file.write(str(i[1]))
+			file.write("\n")
+		file.close()
 
 def spawn_t():
 	f.delete("block")
@@ -971,6 +1034,7 @@ def fallen():
 	
 #Controls
 nextup = randomPiece()
+readScores()
 root.bind("e", evoke_rotate_cw)
 root.bind("q", evoke_rotate_ccw)
 root.bind("a", block_left)
