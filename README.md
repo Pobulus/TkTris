@@ -8,9 +8,10 @@ To start it naviagate to the program's folder in terminal and type <i> python3 t
 <b>Controls:</b><br>
 A/D = Move he block left and right<br>
 S = Lower the block by one tile<br>
-W = Move the block straight down<br>
+W = Drop the block straight down<br>
 Q/E = Rotate the block clockwise/counter clockwise<br>
 R = Restart the game<br>
 G = Toggle the help grid<br>
-H = Hold block<br>
-I = Light mode
+F = Hold block<br>
+P = Toggle pause<br>
+
