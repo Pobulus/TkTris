@@ -1,13 +1,18 @@
 #!/bin/python3
+
+
+#If you want to try it with python2 change tkinter to Tkinter
 from tkinter import *
+
 import time, random, os
 playername = os.getlogin()
 print(playername)
 alph = ["a", "b", "c", "d"]
-
+level = 1
+goal = 5
 minimal_delay = 250
-delay = 1500
-base_delay = 1500
+delay = 1750
+base_delay = 1750
 
 debug = 0
 width = 360
@@ -34,9 +39,15 @@ pv = Canvas(frame, width=te*4, height= te*3, bg="black")
 l1 = Label(frame, text="Next up:")
 l2 = Label(frame, text="hold")
 l3 = Label(frame, text="Your score:")
+l4 = Label(frame, text="Level:")
+lvl = StringVar()
+llvl = Label(frame, textvariable=lvl)
+gl = StringVar()
+lgl = Label(frame, textvariable=gl)
+l5 = Label(frame, text="Goal:")
 scr = StringVar()
 lscore = Label(frame, textvariable=scr)
-darken = [l1, l2, l3, lscore]
+darken = [l1, l2, l3, l4, l5, lscore, llvl, lgl]
 for d in darken:
 	d.configure(background="gray20", foreground="white")
 
@@ -51,7 +62,16 @@ holdpv.pack()
 
 l3.pack()
 lscore.pack()
+l4.pack()
+llvl.pack()
 sbframe.pack()
+l5.pack()
+lgl.pack()
+
+scr.set(str(score))
+gl.set(str(goal))
+lvl.set(str(level))
+
 holder = "n"
 permholder = "n"
 itemcolor = "gray"
@@ -96,6 +116,12 @@ def readScores():
 def toggle_pause(event):
 		global pause
 		pause = not pause
+		if pause:
+			f.create_rectangle(0,0,width, height, fill="gray", tags="veil")
+			f.create_rectangle(width/2-te-te/2, height/2-2*te, width/2-te/2, height/2+te, fill="white", tags="veil")
+			f.create_rectangle(width/2+te/2, height/2-2*te,width/2+te+te/2, height/2+te, fill="white", tags="veil")
+		else:
+			f.delete("veil")
 
 def toggle_grid(event):
 	global helpg
@@ -114,31 +140,36 @@ def grid():
 		for i in range(int(height/te)):
 			f.create_line(0, i*te, width, i*te, tags="grid", fill=itemcolor)
 def evoke_rotate_cw(event):
-	global first_time
-	first_time = True
-	rotate_cw(block_type, rotation)
+	if not pause:
+		global first_time
+		first_time = True
+		rotate_cw(block_type, rotation)
 
 def evoke_rotate_ccw(event):
-	global first_time
-	first_time = True
-	rotate_ccw(block_type, rotation)
+	if not pause:
+		global first_time
+		first_time = True
+		rotate_ccw(block_type, rotation)
 
 def check_wall_right():
 	if f.coords("a")[2] < width and f.coords("b")[2] < width and  f.coords("c")[2] < width and	f.coords("d")[2] < width:
 		return True
 	else:
 		return False
+
 def check_rotate_right():
 	if f.coords("a")[2] -1 < width and f.coords("b")[2] - 1 < width and	 f.coords("c")[2] - 1 < width and  f.coords("d")[2] - 1 < width:
 		return True
 	else:
 		return False
+
 def check_wall_left():
 	if f.coords("a")[0] > 0 and f.coords("b")[0] > 0 and  f.coords("c")[0] > 0 and	f.coords("d")[0] > 0:
 		return True
 	else:
 		return False
 		return False
+
 def check_rotate_left():
 	if f.coords("a")[0] + 1> 0 and f.coords("b")[0] + 1 > 0 and	 f.coords("c")[0] + 1 > 0 and  f.coords("d")[0] + 1 > 0:
 		return True
@@ -177,10 +208,13 @@ def block_fall():
 	
 	
 def ghost_drop():
-	f.coords("ga", f.coords("a"))
-	f.coords("gb", f.coords("b"))
-	f.coords("gc", f.coords("c"))
-	f.coords("gd", f.coords("d"))
+#	f.delete("label")
+	for i in alph:
+		f.coords("g"+i, f.coords(i))
+#		try:
+#			f.create_text(f.coords(i)[0]+te/2,  f.coords(i)[1]+te/2,fill="white", text=i, tags=("label"))
+#		except IndexError:
+#			pass
 	try:
 		while gcheck_wall_down():
 			f.move("ghost", 0, te)
@@ -199,9 +233,10 @@ def colisioncheck():
 
 	block_pieces = f.find_withtag("block")
 	ghost_pieces = f.find_withtag("ghost")
+	labels = f.find_withtag("label")
 	colided = False
 	for i in touch:
-		if i not in block_pieces and i not in ghost_pieces:
+		if i not in block_pieces and i not in ghost_pieces and i not in labels:
 			colided = True
 			if debug:
 				print("colided")
@@ -213,9 +248,10 @@ def gcolisioncheck():
 
 	block_pieces = f.find_withtag("block")
 	ghost_pieces = f.find_withtag("ghost")
+	labels = f.find_withtag("label")
 	colided = False
 	for i in touch:
-		if i not in ghost_pieces and i not in block_pieces:
+		if i not in ghost_pieces and i not in block_pieces and i not in labels:
 			colided = True
 			if debug:
 				print("ghostcolided")
@@ -223,41 +259,45 @@ def gcolisioncheck():
 
 	return colided
 def reset(event):
-	fallen()
-	global score
-	global delay
-	global base_delay
+	#fallen()
+	global score, delay, base_delay,  permholder, holder, level, goal, lvl, gl, scr, block_type, rotation
 	delay = base_delay
-	global permholder
 	permholder = "n"
-	global holder
 	holder = "n"
+	level = 1
+	goal = 5
+	lvl.set(str(level))
+	gl.set(str(goal))
+	rotation = 0
+	block_type = "n"
 	pv.delete(ALL)
 	holdpv.delete("block")
 	f.delete(ALL)
-	print(score)
+	
+	print("Your score: ", score)
 	score = 0
+	scr.set(str(score))
 	if helpg:
 		grid()
+	
+	spawn()
+
+
 def loop():
 	global delay
-	global base_delay
-	global scr
-	scr.set(str(score))
-	print(score)
-	if delay > minimal_delay:
-		delay = int(base_delay - score/4)
 	if not pause:
 		block_fall()
 		if debug:
 			print("delay:"+ str(delay))
-		spawn()
+		
 	root.after(delay, loop)
 	
 def scan_line():
 	i = 1
+	val = 0
 	global score
 	f.delete("grid")
+	cntlines =0
 	for j in range(5):
 		while i < (int(height/te)):
 			scaner = f.find_overlapping(0, height-int(i*te)+5, width, height-int(i*te)+5)
@@ -272,41 +312,72 @@ def scan_line():
 				for k in leftovers:
 					f.move(k, 0, te)
 				i = 0
-				score += 100
+				cntlines += 1
 			scaner = ()
 			i += 1
+	if cntlines == 1:
+		val = 1
+	elif cntlines == 2:
+		val = 3
+	elif cntlines == 3:
+		val = 5
+	elif cntlines == 4:
+		val = 8
+	score += level*val*100
+	global scr
+	scr.set(str(score))
+	global goal, gl
+	goal -= val
+	gl.set(str(goal))
+	if goal < 1:
+		levelup()
 	grid()
+	
+def levelup():
+	global level, delay, goal, lvl, gl
+	if level < 16:
+		level += 1
+	lvl.set(str(level))
+	delay = int(base_delay - level*100)
+	goal = 5*level
+	gl.set(str(goal))
+	
 def block_left(event):
-	if check_wall_left():
-		f.move("block", -te, 0)
-		if colisioncheck():
-			f.move("block", te, 0)
-	ghost_drop()
+	if not pause:
+		if check_wall_left():
+			f.move("block", -te, 0)
+			if colisioncheck():
+				f.move("block", te, 0)
+		ghost_drop()
 	
 def block_right(event):
-	if check_wall_right():
-		f.move("block", te, 0)
-		if colisioncheck():
-			f.move("block", -te, 0)
-	ghost_drop()
+	if not pause:
+		if check_wall_right():
+			f.move("block", te, 0)
+			if colisioncheck():
+				f.move("block", -te, 0)
+		ghost_drop()
 
 def block_down(event):
-	if check_wall_down():
+	if not pause:
+		if check_wall_down():
 
-		f.move("block", 0, te)
+			f.move("block", 0, te)
+			if colisioncheck():
+				f.move("block", 0, -te)
+				fallen()
+
+		else:
+			fallen()
+		ghost_drop()
+def block_harddrop(event):
+	if not pause:
+		while check_wall_down() and not colisioncheck():
+			f.move("block", 0, te)
 		if colisioncheck():
 			f.move("block", 0, -te)
-			fallen()
-
-	else:
+		ghost_drop()
 		fallen()
-	ghost_drop()
-def block_harddrop(event):
-	while check_wall_down() and not colisioncheck():
-		f.move("block", 0, te)
-	if colisioncheck():
-		f.move("block", 0, -te)
-	fallen()
 def rotate_cw(x, y):
 	global rotation
 	global first_time
@@ -346,47 +417,52 @@ def rotate_cw(x, y):
 			rotation = 0
 	if x == "l":
 		if y == 0:
-			f.move("b", 2*te, 0)
-			f.move("c", 0, te)
-			f.move("a", te, -te)
-			f.move("d", te, -2*te)
+			f.move("b", te, -te)
+			f.move("c", -te, te)
+			f.move("d", 0, -2*te)
+			
 
 
 			rotation = 3
 		if y == 1:
-			f.move("c", 2*te, te)
-			f.move("a", 0, -te)
-
+			f.move("c", te, te)
+			f.move("b", -te,-te)
+			f.move("d",-2*te,0)
 			rotation = 0
 		if y == 2:
 
-			f.move("b", -2*te, 0)
-			f.move("c", -2*te, -2*te)
+			f.move("b", -te, te)
+			f.move("c", te, -te)
+			f.move("d", 0, 2*te)
 
 			rotation = 1
 		if y == 3:
 
-			f.move("a", -te, 2*te)
-			f.move("d", -te, 2*te)
+			f.move("b", te, te)
+			f.move("d", 2*te, 0)
+			f.move("c", -te, -te)
 			rotation = 2
 	if x == "j":
 		if y == 0:
-			f.move("b", 2*te, -te)
-			f.move("a", 0, te)
+			f.move("b", te, -te)
+			f.move("c", -te, te)
+			f.move("d", -2*te, 0)
 			rotation = 1
 		if y == 1:
-			f.move("c", -2*te, te)
-			f.move("b", -2*te, te)
+			f.move("c", -te, -te)
+			f.move("b", te, te)
+			f.move("d", 0, -2*te)
 			rotation = 2
 		if y == 2:
-			f.move("a", -te, -2*te)
-			f.move("d", -te, -2*te)
+			f.move("b", -te, te)
+			f.move("d", 2*te, 0)
+			f.move("c", te, -te)
 			rotation = 3
 		if y == 3:
-			f.move("b", -2*te, -te)
-			f.move("c", 0, -2*te)
-			f.move("a", -te, 0)
-			f.move("d", -te, te)
+			f.move("b", -te, -te)
+			f.move("c", te, te)
+			
+			f.move("d", 0, 2*te)
 			rotation = 0
 	if x == "t":
 		if y == 0:
@@ -455,48 +531,52 @@ def rotate_ccw(x, y):
 			rotation = 0
 	if x == "l":
 		if y == 0:
-			f.move("c", -2*te, -te)
-			f.move("a", 0, te)
+			f.move("c", -te, -te)
+			f.move("b", te, te)
+			f.move("d", 2*te, 0)
 			rotation = 1
 		if y == 1:
-			f.move("b", 2*te, 0)
-			f.move("c", 2*te, 2*te)
+			f.move("b", te, -te)
+			f.move("c", -te, te)
+			f.move("d", 0, -2*te)
 			rotation = 2
 		if y == 2:
-			f.move("a", te, -2*te)
-			f.move("d", te, -2*te)
+			f.move("c", te, te)
+			f.move("b", -te, -te)
+			f.move("d", -2*te, 0)
 			rotation = 3
 		if y == 3:
-			f.move("b", -2*te, 0)
-			f.move("c", 0, -te)
-			f.move("a", -te, te)
-			f.move("d", -te, 2*te)
+			f.move("b", -te, te)
+			f.move("c", te, -te)
+			
+			f.move("d", 0, 2*te)
 			rotation = 0
 
 	if x == "j":
 		if y == 0:
-			f.move("b", 2*te, te)
-			f.move("c", 0, 2*te)
-			f.move("a", te, 0)
-			f.move("d", te, -te)
+			f.move("b", te, te)
+			f.move("c", -te, -te)
+			f.move("d", 0, -2*te)
 
 
 			rotation = 3
 		if y == 1:
-			f.move("b", -2*te, te)
-			f.move("a", 0, -te)
-
+			f.move("b", -te, te)
+			f.move("c", te, -te)
+			f.move("d", 2*te, 0)		
 			rotation = 0
 		if y == 2:
-
-			f.move("c", 2*te, -te)
-			f.move("b", 2*te, -te)
-
+			
+			f.move("c", te, te)
+			f.move("b", -te, -te)
+			f.move("d", 0, 2*te)
 
 			rotation = 1
 		if y == 3:
-			f.move("a", te, 2*te)
-			f.move("d", te, 2*te)
+			f.move("b", te, -te)
+			f.move("d", -2*te, 0)
+			f.move("c", -te, te)
+	
 			rotation = 2
 	if x == "t":
 		if y == 0:
@@ -548,7 +628,7 @@ def hold(event):
 	global rotation
 	global block_type
 	global hold_blocker
-	if not hold_blocker:
+	if not hold_blocker and not pause:
 		hold_blocker = True
 		holder = permholder
 		permholder = block_type
@@ -600,7 +680,7 @@ def hold(event):
 		ghost_drop()
 def spawn():
 
-
+	global block_type
 
 	if block_type == "n":
 		global nextup
@@ -637,7 +717,7 @@ def spawn():
 		if debug:
 			print(block_type)
 		if cnt < 2 and colisioncheck():
-			global score, delay, base_delay
+			global score, delay, base_delay, level, scr, lvl, gl, goal
 
 			print("You scored: " + str(score))
 			global scores
@@ -655,7 +735,10 @@ def spawn():
 			writeScores()
 			
 			readScores()
-			fallen()
+			block_type = "n"
+			global rotation
+			rotation = 0
+			
 			f.delete(ALL)
 			holdpv.delete(ALL)
 			pv.delete(ALL)
@@ -666,7 +749,13 @@ def spawn():
 			global hold_blocker
 			hold_blocker = 0
 			score = 0
+			goal = 5
+			level = 1
+			scr.set(str(score))
+			gl.set(str(goal))
+			lvl.set(str(level))
 			delay = base_delay
+			spawn()
 
 		else:
 			cnt += 1
@@ -1017,10 +1106,6 @@ def gspawn_z():
 
 
 def fallen():
-	#print(f.coords("a"))
-	#print(f.coords("b"))
-	#print(f.coords("c"))
-	#print(f.coords("d"))
 	for i in alph:
 		f.create_rectangle(f.coords(i), tags="brick", fill=f.itemcget(i, "fill"))
 	
@@ -1033,10 +1118,12 @@ def fallen():
 	global hold_blocker
 	hold_blocker = False
 	scan_line()
+	spawn()
 	
 #Controls
 nextup = randomPiece()
 readScores()
+spawn()
 root.bind("e", evoke_rotate_cw)
 root.bind("q", evoke_rotate_ccw)
 root.bind("a", block_left)
